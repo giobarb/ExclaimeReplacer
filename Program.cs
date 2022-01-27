@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.Graph;
 using Microsoft;
 using System;
@@ -28,12 +28,11 @@ namespace GraphAPIConsole
         public string email;
         public string signatureAddressHTML;
         public string signatureAddressTXT;
-        public string XMLFilesZip;
         public string encapsulator;
 
         public bool LoadConfig(string pathToConfig)
         {
-            if(System.IO.File.Exists(pathToConfig))
+            if (System.IO.File.Exists(pathToConfig))
             {
                 string config = string.Concat(System.IO.File.ReadAllLines(pathToConfig));
                 //Retrieving the RAW data for config, so it isn't an awful one liner.
@@ -46,7 +45,6 @@ namespace GraphAPIConsole
                     email = JSONConfig.email;
                     signatureAddressHTML = JSONConfig.signatureAddressHTML;
                     signatureAddressTXT = JSONConfig.signatureAddressTXT;
-                    XMLFilesZip = JSONConfig.XMLFilesZip;
                     encapsulator = JSONConfig.encapsulator;
                 }
                 //try parsing JSONObject, if it works parse it and return true.
@@ -136,13 +134,8 @@ namespace GraphAPIConsole
                 client.DownloadFile(jSONConfig.signatureAddressHTML, pathToAppData + "\\signature.txt");
             }
 
-            using (var client = new WebClient())
-            {
-                client.DownloadFile(jSONConfig.signatureAddressHTML, pathToAppData + "\\XMLZipFiles.zip");
-            }
-
             string rawSignatureString = System.IO.File.ReadAllText(pathToAppData + "\\signature.html");
-            rawSignatureString = RawReplacer(pathToAppData,rawSignatureString, jSONConfig, signingUser);
+            rawSignatureString = RawReplacer(pathToAppData, rawSignatureString, jSONConfig, signingUser);
             System.IO.File.WriteAllText(pathToAppData + "\\signature.html", rawSignatureString);
 
 
@@ -154,10 +147,10 @@ namespace GraphAPIConsole
             foreach (string subkeyNames in subkeys)
             {
                 WriteLog(pathToAppData, $"Currently comparing {subkeyNames}");
-                RegistryKey checkingRegistry = Registry.CurrentUser.OpenSubKey(keyName + $"\\{subkeyNames}",true);
+                RegistryKey checkingRegistry = Registry.CurrentUser.OpenSubKey(keyName + $"\\{subkeyNames}", true);
                 if ((string)checkingRegistry.GetValue("Account Name") == jSONConfig.email)
                 {
-                    WriteLog(pathToAppData,"Found the right address to change keys for.");
+                    WriteLog(pathToAppData, "Found the right address to change keys for.");
                     checkingRegistry.SetValue("New Signature", "signature");
                     checkingRegistry.SetValue("Reply-Forward Signature", "signature");
                 }
@@ -165,7 +158,7 @@ namespace GraphAPIConsole
             }
 
             //Console.WriteLine(DateTime.Now.ToLongDateString());
-            Console.WriteLine("Succes");
+            Console.WriteLine("Success");
 
         }
 
