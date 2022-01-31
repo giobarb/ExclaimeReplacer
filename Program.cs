@@ -1,4 +1,3 @@
-
 using Microsoft.Graph;
 using Microsoft;
 using System;
@@ -19,16 +18,29 @@ using Microsoft.Win32;
 
 namespace GraphAPIConsole
 {
+    class FileToDownload
+    {
+        public string addressOfDownload { get; set; }
+        public string nameOfFile { get; set; }
+
+        public void createMe(string rawAddress)
+        {
+            addressOfDownload = rawAddress;
+            nameOfFile = rawAddress.Split('/').Last();
+        }
+    }
+
     //JSONConfig class so I can use work with the config easier.
     class JSONConfig
     {
-        public string tenantID;
-        public string clientID;
-        public string clientSecret;
-        public string email;
-        public string signatureAddressHTML;
-        public string signatureAddressTXT;
-        public string encapsulator;
+        public string tenantID { get; set; }
+        public string clientID { get; set; }
+        public string clientSecret { get; set; }
+        public string email { get; set; }
+        public FileToDownload signatureAddressHTML { get; set; }
+        public FileToDownload signatureAddressTXT { get; set; }
+        public string encapsulator { get; set; }
+        private string temp { get; set; } //need this for JSONConfig, cause it is dynamic
 
         public bool LoadConfig(string pathToConfig)
         {
@@ -43,9 +55,15 @@ namespace GraphAPIConsole
                     clientID = JSONConfig.clientID;
                     clientSecret = JSONConfig.clientSecret;
                     email = JSONConfig.email;
-                    signatureAddressHTML = JSONConfig.signatureAddressHTML;
-                    signatureAddressTXT = JSONConfig.signatureAddressTXT;
                     encapsulator = JSONConfig.encapsulator;
+
+                    temp = JSONConfig.signatureAddressHTML;
+                    signatureAddressHTML = new FileToDownload();
+                    signatureAddressHTML.createMe(temp);
+
+                    temp = JSONConfig.signatureAddressTXT;
+                    signatureAddressTXT = new FileToDownload();
+                    signatureAddressTXT.createMe(temp);
                 }
                 //try parsing JSONObject, if it works parse it and return true.
                 catch
@@ -109,34 +127,6 @@ namespace GraphAPIConsole
                 System.Environment.Exit(0);
             }
 
-            //try downloading the files, if it fails log and exit.
-            try
-            {
-                using (var client = new WebClient())
-                {
-                    client.DownloadFile(jSONConfig.signatureAddressHTML, pathToAppData + "\\test.html");
-                }
-            }
-            catch (Exception ex)
-            {
-                WriteLog(pathToAppData, $"couldn't download the file in \"{jSONConfig.signatureAddressHTML}\" check network path and connection. Exception is {ex.ToString()}");
-                Environment.Exit(0);
-            }
-
-            //downloading the files to use for signatures
-            using (var client = new WebClient())
-            {
-                client.DownloadFile(jSONConfig.signatureAddressHTML, pathToAppData + "\\signature.html");
-            }
-
-            using (var client = new WebClient())
-            {
-                client.DownloadFile(jSONConfig.signatureAddressHTML, pathToAppData + "\\signature.txt");
-            }
-
-            string rawSignatureString = System.IO.File.ReadAllText(pathToAppData + "\\signature.html");
-            rawSignatureString = RawReplacer(pathToAppData, rawSignatureString, jSONConfig, signingUser);
-            System.IO.File.WriteAllText(pathToAppData + "\\signature.html", rawSignatureString);
 
 
             string keyName = "SOFTWARE\\Microsoft\\Office\\16.0\\Outlook\\Profiles\\Outlook\\9375CFF0413111d3B88A00104B2A6676";
@@ -232,6 +222,39 @@ namespace GraphAPIConsole
         public static string Encapsulate(string toEncapsulate, string encapsulator)
         {
             return encapsulator + toEncapsulate + encapsulator;
+        }
+
+        public static void FileDownloader(FileToDownload fileToDownload, JSONConfig jSONConfig, string pathToAppData)
+        {
+            //try downloading the files, if it fails log and exit.
+            try
+            {
+                using (var client = new WebClient())
+                {
+                    client.DownloadFile(jSONConfig.signatureAddressHTML.nameOfFile, pathToAppData + "\\test.html");
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteLog(pathToAppData, $"couldn't download the file in \"{jSONConfig.signatureAddressHTML}\" check network path and connection. Exception is {ex.ToString()}");
+                Environment.Exit(0);
+            }
+
+            //downloading the files to use for signatures
+            using (var client = new WebClient())
+            {
+                client.DownloadFile(jSONConfig.signatureAddressHTML.nameOfFile, pathToAppData + "\\signature.html");
+            }
+
+            using (var client = new WebClient())
+            {
+                client.DownloadFile(jSONConfig.signatureAddressHTML.nameOfFile, pathToAppData + "\\signature.txt");
+            }
+
+            string rawSignatureString = System.IO.File.ReadAllText(pathToAppData + "\\signature.html");
+            rawSignatureString = RawReplacer(pathToAppData, rawSignatureString, jSONConfig, signingUser);
+            System.IO.File.WriteAllText(pathToAppData + "\\signature.html", rawSignatureString);
+
         }
     }
 }
