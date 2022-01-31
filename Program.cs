@@ -224,19 +224,23 @@ namespace GraphAPIConsole
             return encapsulator + toEncapsulate + encapsulator;
         }
 
-        public static void FileDownloader(FileToDownload fileToDownload, JSONConfig jSONConfig, string pathToAppData)
+        public static bool FileDownloaderAndReplacingCapsulesWithData(FileToDownload fileToDownload, JSONConfig jSONConfig, string pathToAppData, User signingUser)
         {
             //try downloading the files, if it fails log and exit.
             try
             {
                 using (var client = new WebClient())
                 {
-                    client.DownloadFile(jSONConfig.signatureAddressHTML.nameOfFile, pathToAppData + "\\test.html");
+                    foreach(FileToDownload a in jSONConfig)
+                    {
+
+                    }
                 }
             }
             catch (Exception ex)
             {
                 WriteLog(pathToAppData, $"couldn't download the file in \"{jSONConfig.signatureAddressHTML}\" check network path and connection. Exception is {ex.ToString()}");
+                return false;
                 Environment.Exit(0);
             }
 
@@ -254,7 +258,7 @@ namespace GraphAPIConsole
             string rawSignatureString = System.IO.File.ReadAllText(pathToAppData + "\\signature.html");
             rawSignatureString = RawReplacer(pathToAppData, rawSignatureString, jSONConfig, signingUser);
             System.IO.File.WriteAllText(pathToAppData + "\\signature.html", rawSignatureString);
-
+            return true;
         }
     }
 }
